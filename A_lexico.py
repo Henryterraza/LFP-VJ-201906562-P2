@@ -296,12 +296,11 @@ def p_INSTRUCCIONES2(p):
                 | EST_CONDICIONALES
                 | EST_ITERATIVAS       
                 | SENT_CFLUJO
-
                 | RETORNO
                 | LLAMADA
   '''
   # colocarlo si es necesario para leer un metodo dentro de otro metodo
-                #   | DEC_METODOS
+                # | DEC_METODOS
                 # | DEC_FUNCIONES
   p[0] = p[1]
 
