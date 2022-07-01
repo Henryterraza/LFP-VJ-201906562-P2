@@ -1,0 +1,24 @@
+esto_es_un_archivo_de_prueba = true;
+
+while(!true){
+if(5*4-96==false){
+void main (int x, int y, boolean prueba){
+
+x=98.547;
+
+main = "string";
+
+//este es un comentario simple
+
+/*no se te olvide el punto
+
+y coma
+*/
+
+break;
+double this = 'j';
+
+return 78.50;
+
+return;
+miId("string", 548)
