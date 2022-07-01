@@ -340,326 +340,428 @@ podremos ver en la pantalla de lado izquierdo lo siguiente
         |      2      | And                                        | Izquierda     |
         |      1      | Or                                         | Izquierda     |
 
+        **Producciones**
+        =
+        ```ru
+        Simbolo inicial = CODIGO
 
-  - #### Clase
-    ``` python
-    from Clases import Datos_AFN, Token, Error, AFN
+        CODIGO : CONTENIDO 
 
+        CONTENIDO : CONTENIDO INSTRUCCIONES
+                  | INSTRUCCIONES
 
-    class AnalizadorLexico:
-        def __init__(self):
-            self.listaTokens = []
-            self.listaErrores = []
-            self.listaAFD = []
-            self.listaAutomatas = []
+        INSTRUCCIONES : DEC_VAR
+                      | ASIG_VAR
+                      | EST_CONDICIONALES
+                      | EST_ITERATIVAS       
+                      | SENT_CFLUJO
+                      | DEC_METODOS
+                      | DEC_FUNCIONES
+                      | RETORNO
+                      | LLAMADA
 
-    ```
-  - #### Listas
-    ``` python
-    self.listaTokens = []
-    self.listaErrores = []
-    self.listaAFD = []
-    self.listaAutomatas = []
+        DEC_VAR : TIPO_DATO identificador asignacion DATO ptcoma
 
-    ```
+        TIPO_DATO : private_int
+                  | private_double
+                  | private_string
+                  | private_char
+                  | private_boolean
 
-  - #### Variables
-    ``` python
-    buffer = ''
-
-    # linea y columna
-    linea = 1
-    line_com = 0
-    columna = 1
-    doble = False
-
-    # estados
-    estado = 0
-
-
-    digito=["0","1","2","3","4","5","6","7","8","9"]
-    letra=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
-    ```
-  - #### Bucle(Leer caracter por caracter)
-    ``` python
-    index = 0
-    while index < len(entrada):
-        c = entrada[index]
-    ```
-
-  - #### caracter( ;,=(){}<>-+*/% )
-    Tendran el siguiente codigo que les permite ser reconocidos
-    ``` python
-    if c == ";":
-      columna += 1
-      buffer += c
-      patron = ";"
-      token = Token(linea, columna,  buffer, 'puntocoma', patron)
-      self.listaTokens.append(token)
-
-      self.AFN_Multi_pre("s0",buffer," ","s1")
-      self.AFN_Multi_FI("s1", "#", buffer, "s2 (aceptacion)",'puntocoma' )
-
-      buffer = ''
-      estado = 0
-    ```
-  - #### Caracteres(== || // /* != >= <= &&)
-    ``` python
-    elif c == "=":
-      columna += 1
-      buffer += c
-      self.AFN_Multi_pre("s0",buffer," ","s1")
-      estado = 1
-
-      #este es dirigido a otro estado para ser leido los siguientes caractes
-
-    elif estado == 1:
-      if c == "=":
-          columna += 1
-          buffer += c
-          self.AFN_Multi_pre("s1",c,c,"s2")
-          estado = 1
-          doble = True
-      else:
-          if doble:
-              patron = "=="
-              token = Token(linea, columna,  buffer, 'Oper_Igualacion', patron)
-              self.listaTokens.append(token)
-              self.AFN_Multi_FI("s2", "#", buffer, "s3 (aceptacion)",'Oper_Igualacion' )
-              doble = False
-              
-          else:
-              patron = "="
-              token = Token(linea, columna,  buffer, 'Oper_Igual', patron)
-              self.listaTokens.append(token)
-              self.AFN_Multi_FI("s1", "#", buffer, "s2 (aceptacion)",'Oper_Igual' )
-          buffer = ''
-          index -= 1
-          estado = 0
-    ```
-  - #### Enteros o decimales
-    ``` python
-    elif c in digito:
-      columna += 1
-      buffer += c
-      self.AFN_Multi_pre("s0",buffer," ","s1")
-      estado = 7
-
-      #este es dirigido a otro estado para ser leido los siguientes caractes
-
-    elif estado == 7:
-          if c in digito:
-              columna += 1
-              self.AFN_Multi_pre("s1",buffer," ","s1")
-              buffer += c
-              estado = 7
-          elif c == '.':
-              columna += 1
-              self.AFN_Multi_pre("s1",c,buffer,"s2")
-              buffer += c
-              estado = 8  #dirige a otro estado
-          else:
-              token = Token(linea, columna,  buffer, 'Dato_Entero', "[0-9]+")
-              self.listaTokens.append(token)
-              self.AFN_Multi_FI("s1", "#", buffer, "s2 (aceptacion)",'Oper_Entero' )
-              buffer = ''
-              index -= 1
-              estado = 0
-
-    elif estado == 8: 
-        if c in digito:
-            columna += 1
-            self.AFN_Multi_pre("s2",c,buffer,"s2")
-            buffer += c
-            estado = 9 #dirige a otro estado
-        else:
-            columna += 1
-            buffer += c 
-            error = Error(linea, columna, buffer)
-            self.listaErrores.append(error)
-            buffer = ''
-            estado = 0
-            
-    elif estado == 9:
-        if c in digito:
-            columna += 1
-            self.AFN_Multi_pre("s2",c,buffer,"s2")
-            buffer += c
-            estado = 9
-        else:
-            token = Token(linea, columna,  buffer, 'Dato_Decimal', "[0-9]+([.][0-9]+)?")
-            self.listaTokens.append(token)
-            self.AFN_Multi_FI("s2", "#", buffer, "s3 (aceptacion)",'Oper_Decimal' )
-            buffer = ''
-            index -= 1
-            estado = 0
-    ```
-  - #### palabras
-    ``` python
-    elif c == '_' or c in letra:
-      columna += 1
-      buffer += c
-      self.AFN_Multi_pre("s0",buffer," ","s1")
-      estado = 10  #dirige a otro estado
-
-    elif estado == 10: 
-      if c == '_' or c in letra or c in digito:
-          columna += 1
-          self.AFN_Multi_pre("s1",c,buffer,"s1")
-          buffer += c
-          estado = 10
-      else:  # verificara si la pabra coresponde a palabra reservada
-          tipoToken = ''
-          patron = ''
-          if buffer.lower() == 'int':
-              tipoToken = 'Reser_Int'
-              patron="Int"
-          elif buffer.lower() == 'double':
-              tipoToken = 'Reser_Double'
-              patron="Double"
-          elif buffer.lower() == 'string':
-              tipoToken = 'Reser_String'
-              patron="String"
-          elif buffer.lower() == 'char':
-              tipoToken = 'Reser_Char'
-              patron="Char"
-          elif buffer.lower() == 'boolean':
-              tipoToken = 'Reser_Boolean'
-              patron="Boolean"
-          elif buffer.lower() == 'if':
-              tipoToken = 'Reser_If'
-              patron="if"
-          elif buffer.lower() == 'else':
-              tipoToken = 'Reser_Else'
-              patron="else"
-          elif buffer.lower() == 'while':
-              tipoToken = 'Reser_While'
-              patron="while"
-          elif buffer.lower() == 'do':
-              tipoToken = 'Reser_Do'
-              patron="do"
-          elif buffer.lower() == 'void':
-              tipoToken = 'Reser_Void'
-              patron="void"
-          elif buffer.lower() == 'return':
-              tipoToken = 'Reser_Return'
-              patron="return"
-          elif buffer.lower() == 'true':
-              tipoToken = 'Reser_True'
-              patron="True"
-          elif buffer.lower() == 'false':
-              tipoToken = 'Reser_False'
-              patron="False"
-          else:
-              tipoToken = 'Identificador'
-              patron = "[_|a-zA-Z]+(([0a-zA-Z]|[_0-9])+)"
-          token = Token(linea, columna,  buffer, tipoToken, patron )
-          self.listaTokens.append(token)
-          self.AFN_Multi_FI("s1", "#", buffer, "s2 (aceptacion)",tipoToken )
-          buffer = ''
-          index -= 1
-          estado = 0
-    ```
-  - #### Comentario(linea, multilinea)
-    ``` python
-    elif c == "/":
-      columna += 1
-      buffer += c
-      self.AFN_Multi_pre("s0",buffer," ","s1")
-      estado = 13   #dirige a otro estado
-    
-    elif estado == 13:
-        if c == "/":
-            columna += 1
-            self.AFN_Multi_pre("s1",c,buffer,"s2")
-            buffer += c
-            estado = 14  #dirige a otro estado
-        elif c == "*":
-            columna += 1
-            self.AFN_Multi_pre("s1",c,buffer,"s2")
-            buffer += c
-            estado = 15  #dirige a otro estado
-        else:
-            patron = "/"
-            token = Token(linea, columna,  buffer, 'Oper_Division', patron)
-            self.listaTokens.append(token)
-            self.AFN_Multi_FI("s1", "#", buffer, "s2 (aceptacion)",'Oper_Division' )
-            buffer = ''
-            index -= 1
-            estado = 0
-    
-    elif estado == 14:
-        if c == '\n':
-            columna += 1
-            buffer += c
-            token = Token(linea, columna,  buffer, "Comen_linea", '(//)([^"]|("))*')
-            self.listaTokens.append(token)
-            self.AFN_Multi_FI("s2", "#", buffer, "s3 (aceptacion)",'Comen_linea' )
-            buffer = ''
-            columna = 1
-            linea +=1
-            estado = 0
-        else:
-            columna += 1
-            self.AFN_Multi_pre("s2",c,buffer,"s2")
-            buffer += c
-            estado = 14
+        DATO : entero
+             | decimal
+             | cadena
+             | char
+             | private_true
+             | private_false
         
-    elif estado == 15: 
-        if c == '*':
-            columna += 1
-            self.AFN_Multi_pre("s2",c,buffer,"s3")
-            buffer += c
-            estado = 16 #dirige a otro estado
-        elif c == '\n':
-            line_com += 1
-            estado = 15
-        else:
-            columna += 1
-            self.AFN_Multi_pre("s2",c,buffer,"s2")
-            buffer += c
-            estado = 15
-    
-    elif estado == 16:
-        if c == '/':
-            columna += 1
-            self.AFN_Multi_pre("s3",c,buffer,"s4")
-            buffer += c
-            token = Token(line_com, columna,  buffer, "Comen_MultLinea", '(/*)([^"]|("))*(*/)')
-            self.listaTokens.append(token)
-            
-            self.AFN_Multi_FI("s4", "#", buffer, "s5 (aceptacion)",'Comen_MultLinea' )
-            linea = linea + line_com
-            buffer = ''
-            estado = 0
-        else:
-            columna += 1
-            self.AFN_Multi_pre("s3",c,buffer,"s2")
-            buffer += c
-            estado = 15
+        ASIG_VAR : identificador asignacion DATO ptcoma
+
+        EST_CONDICIONALES : private_if par_a OPERACION par_b llave_a INSTRUCCIONS llave_b
+                          | private_if par_a OPERACION par_b llave_a INSTRUCCIONS llave_b private_else llave_a INSTRUCCIONS llave_b
+        
+        OPERACION : OPERACION E
+                  | E
+  
+        E : E oper_suma E
+          | E oper_resta E
+          | E oper_multiplicacion E
+          | E oper_division E
+          | E oper_resto E
+          | E oper_igualacion E
+          | E oper_diferenciacion E
+          | E oper_mayor E
+          | E oper_mayor_igual E
+          | E oper_menor E
+          | E oper_menor_igual E
+          | E oper_and E
+          | E oper_or E
+          | oper_not E
+          | identificador
+          | entero
+          | private_false
+          | private_true
+
+        INSTRUCCIONS : INSTRUCCIONS INSTRUCCIONES2
+                     | INSTRUCCIONES2
+
+        INSTRUCCIONES2 : DEC_VAR
+                       | ASIG_VAR
+                       | EST_CONDICIONALES
+                       | EST_ITERATIVAS       
+                       | SENT_CFLUJO
+                       | RETORNO
+                       | LLAMADA
+
+        EST_ITERATIVAS : private_while par_a OPERACION par_b llave_a INSTRUCCIONS llave_b
+                       | private_do llave_a INSTRUCCIONS llave_b private_while par_a OPERACION par_b ptcoma
+
+        SENT_CFLUJO : private_break ptcoma
+                    | private_continue ptcoma
+
+        DEC_METODOS : private_void identificador par_a PARAMETROS par_b llave_a INSTRUCCIONS llave_b
+                    | private_void identificador par_a par_b llave_a INSTRUCCIONS llave_b
+
+        PARAMETROS : PARAMETROS coma TIPO_DATO identificador
+                   | TIPO_DATO identificador
+  
+        DEC_FUNCIONES : TIPO_DATO identificador par_a PARAMETROS par_b llave_a INSTRUCCIONS llave_b
+                      | TIPO_DATO identificador par_a par_b llave_a INSTRUCCIONS llave_b
+
+        RETORNO : private_return ptcoma
+                | private_return DATO ptcoma
+  
+        LLAMADA : identificador par_a ARGUMENTOS par_b 
+                | identificador par_a par_b
+        
+        ARGUMENTOS : ARGUMENTOS coma DATO
+                   | DATO
+        ```
+
+
+  - #### Precedencia
+    ``` python
+    precedence = (
+        ('left','oper_or'),
+        ('left','oper_and'),
+        ('left','oper_igualacion','oper_diferenciacion'),
+        ('left','oper_menor','oper_mayor','oper_menor_igual','oper_mayor_igual'),
+        ('left','oper_suma','oper_resta'),
+        ('left','oper_multiplicacion','oper_division','oper_resto'),
+        ('left','oper_not')
+        )
     ```
-  - #### Errores
-    ``` python 
-    else:
-        columna += 1
-        buffer += c
-        error = Error(linea, columna, buffer)
-        self.listaErrores.append(error)
-        buffer = ''
-        estado = 0
+  - #### Gramatica de inicio
+    ``` python
+    def p_CODIGO(p):
+        '''
+        CODIGO : CONTENIDO 
+        '''
+        p[0] = p[1]
     ```
 
-  - #### Generador de HTML
+  - #### Gramatica instruccion
+    ``` python
+    def p_CONTENIDO(p):
+        '''
+        CONTENIDO : CONTENIDO INSTRUCCIONES
+                    | INSTRUCCIONES
+        '''
+        if len(p)==3:
+            p[0] = p[1]
+            p[0].append(p[2])
+        else:
+            p[0] = [p[1]]
+    ```
+
+  - #### Gramatica Instrucciones
+    ```python
+    def p_INSTRUCCIONES(p):
+        '''
+        INSTRUCCIONES : DEC_VAR
+                        | ASIG_VAR
+                        | EST_CONDICIONALES
+                        | EST_ITERATIVAS       
+                        | SENT_CFLUJO
+                        | DEC_METODOS
+                        | DEC_FUNCIONES
+                        | RETORNO
+                        | LLAMADA
+        '''
+        p[0] = p[1]
+    ```
+  - #### Gramatica de declaracion de variables
+    ``` python
+    def p_DEC_VAR(p):
+        '''
+        DEC_VAR : TIPO_DATO identificador asignacion DATO ptcoma
+        '''
+        p[0] = [p[1]]
+        p[0].append(p[4])
+    ```
+  - #### Gramatica de tipo de dato
+    ``` python
+    def p_TIPO_DATO(p):
+        '''
+        TIPO_DATO : private_int
+                    | private_double
+                    | private_string
+                    | private_char
+                    | private_boolean
+        '''
+        p[0] = p[1]
+    ```
+  - #### Gramatica dato
+    ``` python
+    def p_DATO(p):
+        '''
+        DATO : entero
+                | decimal
+                | cadena
+                | char
+                | private_true
+                | private_false
+        '''
+        p[0] = p[1]
+    ```
+  - #### Gramatica de asignacion de variables
+    ``` python
+    def p_ASIG_VAR(p):
+        '''
+        ASIG_VAR : identificador asignacion DATO ptcoma
+        '''
+        p[0] = [p[3]]
+    ```
+  - #### Gramatica de estructuras condicionales (if)
+    ``` python 
+    def p_EST_CONDICIONALES(p):
+        '''
+        EST_CONDICIONALES : private_if par_a OPERACION par_b llave_a INSTRUCCIONS llave_b
+                            | private_if par_a OPERACION par_b llave_a INSTRUCCIONS llave_b private_else llave_a INSTRUCCIONS llave_b
+        '''
+        if len(p)==8:
+            p[0] = [p[3]]
+            p[0].append(p[6])
+        else:
+            p[0] = [p[3]]
+            p[0].append(p[6])
+            p[0].append(p[10])
+    ```
+  - #### Gramatica de operaciones
+    ``` python
+    def p_OPERACION(p):
+        '''
+        OPERACION : OPERACION E
+                    | E
+        '''
+        if len(p)==3:
+            p[0] = p[1]
+            p[0].append(p[2])
+        else:
+            p[0] = p[1]
+
+        def p_E(p):
+        '''
+        E : E oper_suma E
+            | E oper_resta E
+            | E oper_multiplicacion E
+            | E oper_division E
+            | E oper_resto E
+            | E oper_igualacion E
+            | E oper_diferenciacion E
+            | E oper_mayor E
+            | E oper_mayor_igual E
+            | E oper_menor E
+            | E oper_menor_igual E
+            | E oper_and E
+            | E oper_or E
+            | oper_not E
+            | identificador
+            | entero
+            | private_false
+            | private_true
+        '''
+        if len(p)==3:
+            p[0] = {"linea": p.lexer.lineno, "columna": getColumn(p.lexer), "operacion": p[1], "derecha": p[2]}
+        elif len(p)==2:
+            p[0] = {"linea": p.lexer.lineno, "columna": getColumn(p.lexer), "valor": p[1]}
+        else:
+            p[0] = {"linea": p.lexer.lineno, "columna": getColumn(p.lexer), "operacion": p[2], "izquierda": p[1], "derecha": p[3]}
+
+    ```
+  - #### Gramatica de instrucciones sin metodos y funciones
+    ```python
+    def p_INSTRUCCIONS(p):
+        '''
+        INSTRUCCIONS : INSTRUCCIONS INSTRUCCIONES2
+                    | INSTRUCCIONES2
+        '''
+        if len(p)==3:
+            p[0] = p[1]
+            p[0].append(p[2])
+        else:
+            p[0] = [p[1]]
+
+        def p_INSTRUCCIONES2(p):
+        '''
+        INSTRUCCIONES2 : DEC_VAR
+                        | ASIG_VAR
+                        | EST_CONDICIONALES
+                        | EST_ITERATIVAS       
+                        | SENT_CFLUJO
+                        | RETORNO
+                        | LLAMADA
+        '''
+        
+        p[0] = p[1]
+
+    ```
+  - #### Gramatica de iteraciones (bucles while-do while)
+    ```python 
+    def p_EST_ITERATIVAS(p):
+        '''
+        EST_ITERATIVAS : private_while par_a OPERACION par_b llave_a INSTRUCCIONS llave_b
+                            | private_do llave_a INSTRUCCIONS llave_b private_while par_a OPERACION par_b ptcoma
+        '''
+        
+        if len(p)==8:
+            p[0] = [p[3]]
+            p[0].append(p[6])
+        else:
+            p[0] = [p[3]]
+            p[0].append(p[7])
+    
+    ```
+  - #### Gramatica de sentencias de flujo
+    ```python
+    def p_SENT_CFLUJO(p):
+        '''
+        SENT_CFLUJO : private_break ptcoma
+                    | private_continue ptcoma
+        '''
+        p[0] = [p[1]]
+    ```
+  - #### Gramatica de declaracion de metodos
+    ```python 
+    def p_DEC_METODOS(p):
+        '''
+        DEC_METODOS : private_void identificador par_a PARAMETROS par_b llave_a INSTRUCCIONS llave_b
+                    | private_void identificador par_a par_b llave_a INSTRUCCIONS llave_b
+        '''
+
+        if len(p)==9:
+            p[0] = [p[4]]
+            p[0].append(p[7])
+        else:
+            p[0] = [p[6]]
+    ```
+  - #### Gramatica de parametros
+    ```python
+    def p_PARAMETROS(p):
+        '''
+        PARAMETROS : PARAMETROS coma TIPO_DATO identificador
+                    | TIPO_DATO identificador
+        '''
+        if len(p)==5:
+            p[0] = p[1]
+            p[0].append(p[3])
+            p[0].append(p[4])
+        else:
+            p[0] = [p[1]]
+            p[0].append(p[2])
+    ```
+  - #### Gramatica de declaracion de funciones
+    ```python
+    def p_DEC_FUNCIONES(p):
+        '''
+        DEC_FUNCIONES : TIPO_DATO identificador par_a PARAMETROS par_b llave_a INSTRUCCIONS llave_b
+                        | TIPO_DATO identificador par_a par_b llave_a INSTRUCCIONS llave_b
+        '''
+
+        if len(p)==9:
+            p[0] = [p[1]]
+            p[0].append(p[2])
+            p[0].append(p[4])
+            p[0].append(p[7])
+        else:
+            p[0] = [p[1]]
+            p[0].append(p[2])
+            p[0].append(p[6])
+    ```
+  - #### Gramatica de retorno
+    ```python
+    def p_RETORNO(p):
+        '''
+        RETORNO : private_return ptcoma
+                | private_return DATO ptcoma
+        '''
+        if len(p)==3:
+            p[0] = [p[1]]
+            p[0].append(p[2])
+        else:
+            p[0] = [p[1]]
+            p[0].append(p[2])
+            p[0].append(p[3])
+    ```
+  - #### Gramatica de llamada metodos y funciones
+    ```python
+    def p_LLAMADA(p):
+        '''
+        LLAMADA : identificador par_a ARGUMENTOS par_b 
+                | identificador par_a par_b
+        '''
+
+        if len(p)==5:
+            p[0] = [p[1]]
+            p[0].append(p[3])
+        else:
+            p[0] = [p[1]]
+    ```
+  - #### Gramatica de argumentos
+    ```python
+    def p_ARGUMENTOS(p):
+        '''
+        ARGUMENTOS : ARGUMENTOS coma DATO
+                    | DATO
+        '''
+        if len(p)==4:
+            p[0] = p[1]
+            p[0].append(p[3])
+        else:
+            p[0] = [p[1]]
+    ```
+  - #### Gramatica de error
+    ```python
+    def p_error(p):
+        print(p)
+        if p:
+            global tabla_errores
+            tabla_errores +='''
+                    <tr>
+                    <td> ''' + str(p.lineno) + ''' </td>
+                    <td> ''' + str(p.lexpos) + ''' </td>
+                    <td> ''' + str("Sintactico") + ''' </td>
+                    <td> Sintaxis no valida cerca de ''' + str(p.value[0]) + ''' </td>
+                    </tr>
+                    '''
+        else:
+            print("Ninguna instrucción válida")
+    ```
+  - 
+    
+
+  - #### Generador de HTML de tokens
     ```Python
     def GenerarHTML(self, nombre):
-        f = open(nombre + '.html','w')
+        hoja = {**reserved, **patrones}
+        f = open(nombre + '-tokens.html','w')
 
         mensaje = """<!doctype html>
                     <html lang="en">
                     <head>
                         <meta charset="utf-8">
                         <meta name="viewport" content="width=device-width, initial-scale=1">
-                        <title>Reporte-""" + nombre + """</title>
+                        <title>""" + nombre + """-tokens</title>
                         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
                     </head>
                     <body style="background-color: #f0efe9;">   
@@ -669,7 +771,6 @@ podremos ver en la pantalla de lado izquierdo lo siguiente
             <div class="text-center mb-5">
                 <h1 class="display-4 text-black">REPORTE DE TOKENS</h1>    
             </div>
-
                 <div class="container">
                     <div class="row">
                         <div class="col">
@@ -685,78 +786,60 @@ podremos ver en la pantalla de lado izquierdo lo siguiente
                                 </thead>
                                 <tbody class="table-group-divider">'''
                             
-        for p in self.listaTokens:
-            mensaje += '''
-            <tr>
-            <td> ''' + str(p.linea) + ''' </td>
-            <td> ''' + str(p.columna) + ''' </td>
-            <td> ''' + str(p.lexema) + ''' </td>
-            <td> ''' + str(p.token) + ''' </td>
-            <td> ''' + str(p.patron) + ''' </td>
-            </tr>'''
-                                   
+        for p in lexer:
+              for patron in hoja.items():
+                    
+                    if p.type == patron[1]:
+                        mensaje += '''
+                        <tr>
+                        <td> ''' + str(p.lineno) + ''' </td>
+                        <td> ''' + str(p.lexpos) + ''' </td>
+                        <td> ''' + str(p.value) + ''' </td>
+                        <td> ''' + str(p.type) + ''' </td>
+                        <td> ''' + str(patron[0]) + ''' </td>
+                        </tr>'''
+                        continue
+          
+             
         mensaje+= '''                          
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>        
-                </div>
-        
-        '''
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>        
+                      </div>
+              
+              '''
 
-        # Tabla de AFDS
-        for l in self.listaAutomatas:  
-            mensaje += '''
-                
-
-                    <div class="container">
-                        <div class="row">
-                            <div class="col">
-                            <div>
-                                <h5>
-                                <b>Lexema: ''' + l.lexema  + ''' Token: ''' + l.token+''' </b>
-                                </h5>    
-                            </div>
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                        <th scope="col">Estado</th>
-                                        <th scope="col">Caracter</th>
-                                        <th scope="col">Lexema Reconocido</th>
-                                        <th scope="col">Siguiente Estado</th>
-
-                                        </tr>
-                                    </thead>
-                                    <tbody class="table-group-divider">'''
-                                
-            for k in l.lista:
-                mensaje += '''
-                <tr>
-                <td> ''' + str(k.estado) + ''' </td>
-                <td> ''' + str(k.caracter) + ''' </td>
-                <td> ''' + str(k.lexema) + ''' </td>
-                <td> ''' + str(k.S_estado) + ''' </td>
-                </tr>'''
-                                    
-            mensaje+= '''                          
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>        
-                    </div>
-            
-            '''
-
-
-
-
-
-        #Tabla de errores
         mensaje += '''
-                        <div class="text-center mb-5">
-                            <h1 class="display-4 text-black">REPORTE DE ERRORES</h1>    
-                        </div>
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+                    </body>
+                    </html>'''
 
+        f.write(mensaje)
+        f.close()
+        
+        HTML_ERROR(nombre)
+    ```
+  - #### Generador de HTML de errores
+    ```python
+    def HTML_ERROR(nombre):
+        f = open(nombre + '-errores.html','w')
+
+        mensaje = """<!doctype html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                        <title>""" + nombre + """-errores</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+                    </head>
+                    <body style="background-color: #f0efe9;">   
+                    """
+        # Tabla de tokens
+        mensaje += '''
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-black">REPORTE DE ERRORES</h1>    
+            </div>
                 <div class="container">
                     <div class="row">
                         <div class="col">
@@ -765,28 +848,23 @@ podremos ver en la pantalla de lado izquierdo lo siguiente
                                     <tr>
                                     <th scope="col">Linea</th>
                                     <th scope="col">Columna</th>
-                                    <th scope="col">Lexema</th>
+                                    <th scope="col">Tipo</th>
+                                    <th scope="col">Mensaje</th>
                                     </tr>
                                 </thead>
                                 <tbody class="table-group-divider">'''
                             
-        for p in self.listaErrores:
-            mensaje += '''
-            <tr>
-            <td> ''' + str(p.linea) + ''' </td>
-            <td> ''' + str(p.columna) + ''' </td>
-            <td> ''' + str(p.lexema) + ''' </td>
-            </tr>'''
-                                   
+        mensaje+= tabla_errores
+          
+             
         mensaje+= '''                          
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>        
-                </div>
-        
-        '''
-
+                                      </tbody>
+                                  </table>
+                              </div>
+                          </div>        
+                      </div>
+              
+              '''
 
         mensaje += '''
                     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>

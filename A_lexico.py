@@ -419,8 +419,6 @@ def p_error(p):
               <td> Sintaxis no valida cerca de ''' + str(p.value[0]) + ''' </td>
               </tr>
               '''
-
-    # print(f"Sintaxis no válida cerca de '{p.value}' ({p.type})")
   else:
     print("Ninguna instrucción válida")
 
