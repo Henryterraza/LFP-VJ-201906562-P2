@@ -84,8 +84,6 @@ Se abren los reportes generados, contienen lo siguiente
 
 - Tabla de tokens 
 ![Rtokens](R_Tokens.png)
-- AST 
-![Rtokens](T_AFN.png)
 - Tabla de errores
 ![Rtokens](T_errores.png)
 
