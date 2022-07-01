@@ -296,6 +296,8 @@ def p_INSTRUCCIONES2(p):
                 | EST_CONDICIONALES
                 | EST_ITERATIVAS       
                 | SENT_CFLUJO
+                | DEC_METODOS
+                | DEC_FUNCIONES
                 | RETORNO
                 | LLAMADA
   '''
